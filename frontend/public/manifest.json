@@ -1,0 +1,23 @@
+{
+  "name": "Cylinder Management ERP",
+  "short_name": "Cylinder ERP",
+  "description": "Cylinder Management ERP System",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#2563eb",
+  "categories": ["business", "productivity"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
