@@ -12,7 +12,10 @@ const asBoolean = (value, fallback) => {
 };
 
 const resolveBootstrapEnabled = () => {
-  const defaultEnabled = process.env.NODE_ENV !== 'production';
+  // Enable bootstrap admin by default in all environments so default credentials
+  // are available after a fresh database reset. Set BOOTSTRAP_DEFAULT_ADMIN=false
+  // to disable in any environment.
+  const defaultEnabled = true;
   return asBoolean(process.env.BOOTSTRAP_DEFAULT_ADMIN, defaultEnabled);
 };
 
