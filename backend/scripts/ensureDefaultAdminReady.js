@@ -5,20 +5,20 @@ const { ensureDatabaseExists } = require('../utils/databaseBootstrap');
 const { ensureBootstrapAdmin } = require('../services/bootstrapAdmin');
 
 async function ensureDefaultAdminReady() {
-  const dbName = process.env.DB_NAME || 'cylinder_erp';
-  const dbHost = process.env.DB_HOST || 'localhost';
-  const dbPort = process.env.DB_PORT || '5432';
-  const dbUser = process.env.DB_USER || 'postgres';
-  const dbPassword = process.env.DB_PASSWORD || '';
+  const shouldAutoCreate = process.env.DB_AUTO_CREATE !== 'false' && process.env.NODE_ENV !== 'production';
 
-  if (process.env.DB_AUTO_CREATE !== 'false' && process.env.NODE_ENV !== 'production') {
-    await ensureDatabaseExists({
-      host: dbHost,
-      port: dbPort,
-      database: dbName,
-      user: dbUser,
-      password: dbPassword
-    });
+  if (shouldAutoCreate) {
+    const bootstrapConfig = process.env.DATABASE_URL
+      ? { connectionString: process.env.DATABASE_URL }
+      : {
+          host: process.env.DB_HOST,
+          port: Number(process.env.DB_PORT),
+          database: process.env.DB_NAME,
+          user: process.env.DB_USER,
+          password: process.env.DB_PASSWORD
+        };
+
+    await ensureDatabaseExists(bootstrapConfig);
   }
 
   await sequelize.authenticate();
@@ -37,7 +37,7 @@ ensureDefaultAdminReady()
     process.exit(0);
   })
   .catch(async (error) => {
-    console.error('[SETUP ERROR]', error.message);
+    console.error('[SETUP ERROR]', error);
     try {
       await sequelize.close();
     } catch (closeError) {

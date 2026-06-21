@@ -82,20 +82,20 @@ process.on('unhandledRejection', (err) => {
 const startServer = async () => {
   try {
     console.log('About to start database authentication...');
-    const dbName = process.env.DB_NAME || 'cylinder_erp';
-    const dbHost = process.env.DB_HOST || 'localhost';
-    const dbPort = process.env.DB_PORT || '5432';
-    const dbUser = process.env.DB_USER || 'postgres';
-    const dbPassword = process.env.DB_PASSWORD || '';
+    const shouldAutoCreate = process.env.DB_AUTO_CREATE !== 'false' && process.env.NODE_ENV !== 'production';
 
-    if (process.env.DB_AUTO_CREATE !== 'false' && process.env.NODE_ENV !== 'production') {
-      await ensureDatabaseExists({
-        host: dbHost,
-        port: dbPort,
-        database: dbName,
-        user: dbUser,
-        password: dbPassword
-      });
+    if (shouldAutoCreate) {
+      const bootstrapConfig = process.env.DATABASE_URL
+        ? { connectionString: process.env.DATABASE_URL }
+        : {
+            host: process.env.DB_HOST,
+            port: Number(process.env.DB_PORT),
+            database: process.env.DB_NAME,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASSWORD
+          };
+
+      await ensureDatabaseExists(bootstrapConfig);
     }
 
     await sequelize.authenticate();
@@ -112,13 +112,17 @@ const startServer = async () => {
     await startDailyStockScheduler();
     startDailyCleanupScheduler();
 
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, '127.0.0.1', () => {
+    const PORT = process.env.PORT;
+    if (!PORT) {
+      throw new Error('PORT is required in environment variables. Set process.env.PORT before starting the server.');
+    }
+
+    app.listen(Number(PORT), () => {
       console.log(`Server running on port ${PORT}`);
       console.log(`[SERVER] Environment: ${process.env.NODE_ENV || 'development'}`);
     });
   } catch (err) {
-    console.error('[DATABASE ERROR]', err);
+    console.error('[SETUP ERROR]', err);
     process.exit(1);
   }
 };

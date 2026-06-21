@@ -1,10 +1,47 @@
 const { Client } = require('pg');
+require('dotenv').config();
 
 function escapeIdentifier(identifier) {
   return String(identifier).replace(/"/g, '""');
 }
 
+function getBootstrapClientConfig({ connectionString, host, port, user, password }) {
+  if (connectionString) {
+    return {
+      connectionString,
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    };
+  }
+
+  if (!host || !port || !user) {
+    throw new Error(
+      'Missing database bootstrap configuration. Set DATABASE_URL or DB_HOST, DB_PORT, DB_USER, DB_PASSWORD.'
+    );
+  }
+
+  const config = {
+    host,
+    port,
+    user,
+    password,
+    database: 'postgres'
+  };
+
+  if (process.env.NODE_ENV === 'production') {
+    config.ssl = {
+      require: true,
+      rejectUnauthorized: false
+    };
+  }
+
+  return config;
+}
+
 async function ensureDatabaseExists({
+  connectionString,
   host,
   port,
   database,
@@ -12,13 +49,7 @@ async function ensureDatabaseExists({
   password,
   logger = console
 }) {
-  const client = new Client({
-    host,
-    port,
-    user,
-    password,
-    database: 'postgres'
-  });
+  const client = new Client(getBootstrapClientConfig({ connectionString, host, port, user, password }));
 
   let connected = false;
 
