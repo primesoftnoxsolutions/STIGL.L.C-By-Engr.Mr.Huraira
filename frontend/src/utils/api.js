@@ -1,12 +1,26 @@
 import axios from 'axios';
 
+const normalizeApiUrl = (value) => {
+  if (!value) return null;
+
+  const trimmed = String(value).trim().replace(/\/+$/, '');
+  if (!trimmed) return null;
+
+  if (trimmed.startsWith('/') || /^[a-z][a-z\d+\-.]*:\/\//i.test(trimmed) || trimmed.startsWith('//')) {
+    return trimmed;
+  }
+
+  return `https://${trimmed}`;
+};
+
 const resolveApiUrl = () => {
   // Force local requests to this project's backend to avoid collisions with other local APIs.
   if (typeof window !== 'undefined') {
     const host = window.location.hostname;
     if (host === 'localhost' || host === '127.0.0.1') return 'http://127.0.0.1:5050/api';
   }
-  if (process.env.REACT_APP_API_URL) return process.env.REACT_APP_API_URL.replace(/\/+$/, '');
+  const envApiUrl = normalizeApiUrl(process.env.REACT_APP_API_URL);
+  if (envApiUrl) return envApiUrl;
   return '/api';
 };
 
